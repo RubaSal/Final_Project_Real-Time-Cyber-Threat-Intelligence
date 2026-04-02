@@ -90,8 +90,12 @@ Example fields extracted:
 ## Current Project Structure
 
 ```text
-Cyber-Threat-Intelligence-Platform/
+Final_Project_Real-Time-Cyber-Threat-Intelligence/
 │
+├── data/
+├── .env
+├── .gitignore
+├── docker-compose.yaml
 ├── ingest_abuseipdb.py
 ├── transform_abuseipdb.py
 ├── ingest_geoip.py
@@ -99,9 +103,8 @@ Cyber-Threat-Intelligence-Platform/
 ├── enrich_abuseipdb_with_geoip.py
 ├── ingest_security_news.py
 ├── transform_security_news.py
+├── upload_to_minio.py
 ├── requirements.txt
-├── .gitignore
-├── .env
 ├── abuseipdb_raw.json
 ├── abuseipdb_processed.json
 ├── geoip_raw.json
@@ -156,6 +159,12 @@ Reads the raw security news response and transforms it into a simplified process
 The processed output is saved as:
 - `security_news_processed.json`
 
+### 8. `upload_to_minio.py`
+Connects to MinIO and uploads the project datasets into the data lake bucket using an organized folder structure for raw, processed, and enriched layers.
+
+### 9. `docker-compose.yaml`
+Defines the local MinIO service used as the project data lake storage layer.
+
 ---
 
 ## Environment Variables
@@ -173,7 +182,7 @@ These variables are used to authenticate requests to the external APIs.
 - `GEOIP_API_KEY` – API key for the GeoIP service
 - `SECURITY_NEWS_API_KEY` – API key for the Security News service
 
-Additional variables for MinIO, Kafka, and Airflow may be added in later stages of the project.
+Additional variables for Kafka and Airflow may be added in later stages of the project.
 
 ---
 
@@ -197,6 +206,11 @@ Create a `.env` file in the project root directory and add your actual API keys 
 ABUSE_API_KEY=your_actual_abuseipdb_api_key
 GEOIP_API_KEY=your_actual_geoip_api_key
 SECURITY_NEWS_API_KEY=your_actual_security_news_api_key
+```
+
+### 4. Start MinIO
+```bash
+docker compose up -d
 ```
 
 ---
@@ -238,6 +252,11 @@ python ingest_security_news.py
 python transform_security_news.py
 ```
 
+### Step 8 - Upload datasets to MinIO
+```bash
+python upload_to_minio.py
+```
+
 ---
 
 ## Current Workflow
@@ -254,6 +273,10 @@ At the current stage, the project performs the following steps:
 9. Pulls cybersecurity-related news from the Security News API
 10. Stores the raw security news response as JSON
 11. Transforms security news data into a processed contextual intelligence dataset
+12. Starts a local MinIO service as the project data lake
+13. Uploads raw datasets to MinIO
+14. Uploads processed datasets to MinIO
+15. Uploads enriched datasets to MinIO in an organized bucket structure
 
 ---
 
@@ -281,27 +304,36 @@ Current output:
 
 ---
 
-## Planned Next Steps
+## MinIO Data Lake Storage
 
-### 1. MinIO Integration
-Store raw, processed, enriched, and contextual datasets in MinIO as a data lake.
+The project stores all data layers in MinIO using a structured bucket-based layout.
 
-Planned logical folder structure:
+Bucket name:
+- `cyber-threat-intelligence`
 
+Logical object structure:
 ```text
-raw/abuseipdb/
-processed/abuseipdb/
-raw/geoip/
-processed/geoip/
-enriched/
-raw/security_news/
-processed/security_news/
+raw/abuseipdb/abuseipdb_raw.json
+raw/geoip/geoip_raw.json
+raw/security_news/security_news_raw.json
+
+processed/abuseipdb/abuseipdb_processed.json
+processed/geoip/geoip_processed.json
+processed/security_news/security_news_processed.json
+
+enriched/abuseipdb_geoip_enriched.json
 ```
 
-### 2. Kafka Streaming
+This structure separates raw, processed, and enriched data layers and makes the pipeline easier to manage, validate, and extend.
+
+---
+
+## Planned Next Steps
+
+### 1. Kafka Streaming
 Send enriched records into Kafka for near real-time streaming and downstream consumption.
 
-### 3. Airflow Orchestration
+### 2. Airflow Orchestration
 Create an Airflow DAG to orchestrate the pipeline execution order.
 
 Expected DAG flow:
@@ -340,9 +372,11 @@ This approach makes the project modular, scalable, and easier to extend.
 - JSON
 - GitHub
 - NewsAPI
+- MinIO
+- Docker
+- Docker Compose
 
 ### Planned / upcoming technologies
-- MinIO
 - Kafka
 - Airflow
 
@@ -372,6 +406,7 @@ This approach makes the project modular, scalable, and easier to extend.
 - Raw datasets are kept separately from processed datasets to preserve original responses and support reproducibility.
 - The project is being developed incrementally, with each component tested independently before being integrated into the full pipeline.
 - Security News currently acts as a contextual intelligence source rather than a direct IP-level enrichment source.
+- MinIO is used as the project data lake for storing raw, processed, and enriched datasets in a structured format.
 
 ---
 
@@ -380,7 +415,6 @@ Possible future enhancements include:
 - Enriching multiple IPs dynamically instead of testing only a single IP
 - Improving country detection in security news articles
 - Adding more advanced threat topic classification
-- Writing data directly to MinIO
 - Adding Kafka producer and consumer scripts
 - Adding Airflow scheduling
 - Adding data validation and error handling improvements
