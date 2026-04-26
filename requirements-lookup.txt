@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+elasticsearch==7.13.4
+python-dotenv
+requests
+psycopg2-binary

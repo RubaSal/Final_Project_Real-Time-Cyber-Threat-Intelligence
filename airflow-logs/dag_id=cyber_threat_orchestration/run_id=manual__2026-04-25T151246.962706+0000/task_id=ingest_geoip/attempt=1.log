@@ -1,0 +1,84 @@
+{"timestamp":"2026-04-25T15:13:04.286473Z","level":"info","event":"DAG bundles loaded: dags-folder","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":209}
+{"timestamp":"2026-04-25T15:13:04.293754Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/cyber_threat_orchestration.py","logger":"airflow.dag_processing.dagbag.BundleDagBag","filename":"dagbag.py","lineno":469}
+{"timestamp":"2026-04-25T15:14:28.576392Z","level":"info","event":"Starting GeoIP enrichment for 74 IPs...","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.580816Z","level":"info","event":"[1/74] Fetching GEOIP for 64.62.197.51","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.584625Z","level":"info","event":"[2/74] Fetching GEOIP for 62.60.130.75","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.589722Z","level":"info","event":"[3/74] Fetching GEOIP for 182.95.230.122","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.591354Z","level":"info","event":"[4/74] Fetching GEOIP for 81.19.219.202","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.592621Z","level":"info","event":"[5/74] Fetching GEOIP for 175.6.40.93","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.593978Z","level":"info","event":"[6/74] Fetching GEOIP for 171.242.235.30","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.595511Z","level":"info","event":"[7/74] Fetching GEOIP for 66.132.172.103","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.596701Z","level":"info","event":"[8/74] Fetching GEOIP for 103.134.154.79","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.597531Z","level":"info","event":"[9/74] Fetching GEOIP for 20.65.185.115","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.598632Z","level":"info","event":"[10/74] Fetching GEOIP for 193.176.29.18","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.600637Z","level":"info","event":"[11/74] Fetching GEOIP for 81.22.48.19","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.602084Z","level":"info","event":"[12/74] Fetching GEOIP for 89.229.150.140","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.603507Z","level":"info","event":"[13/74] Fetching GEOIP for 31.14.254.74","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.604455Z","level":"info","event":"[14/74] Fetching GEOIP for 222.114.235.22","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.605581Z","level":"info","event":"[15/74] Fetching GEOIP for 66.132.172.226","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.606708Z","level":"info","event":"[16/74] Fetching GEOIP for 213.177.179.62","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.608157Z","level":"info","event":"[17/74] Fetching GEOIP for 213.238.170.117","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.609608Z","level":"info","event":"[18/74] Fetching GEOIP for 183.196.144.45","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.610854Z","level":"info","event":"[19/74] Fetching GEOIP for 179.93.232.98","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.611878Z","level":"info","event":"[20/74] Fetching GEOIP for 101.36.117.234","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.612776Z","level":"info","event":"[21/74] Fetching GEOIP for 66.132.186.206","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.613620Z","level":"info","event":"[22/74] Fetching GEOIP for 111.170.18.142","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.614594Z","level":"info","event":"[23/74] Fetching GEOIP for 111.26.62.42","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.615980Z","level":"info","event":"[24/74] Fetching GEOIP for 78.128.114.54","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.617319Z","level":"info","event":"[25/74] Fetching GEOIP for 66.132.195.42","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.618548Z","level":"info","event":"[26/74] Fetching GEOIP for 183.91.11.36","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.619798Z","level":"info","event":"[27/74] Fetching GEOIP for 101.51.110.214","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.620838Z","level":"info","event":"[28/74] Fetching GEOIP for 87.236.176.174","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.621880Z","level":"info","event":"[29/74] Fetching GEOIP for 113.62.174.87","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.622840Z","level":"info","event":"[30/74] Fetching GEOIP for 34.53.158.15","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.624108Z","level":"info","event":"[31/74] Fetching GEOIP for 85.240.193.104","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.625032Z","level":"info","event":"[32/74] Fetching GEOIP for 120.26.32.101","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.625892Z","level":"info","event":"[33/74] Fetching GEOIP for 72.201.174.12","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.627086Z","level":"info","event":"[34/74] Fetching GEOIP for 182.151.41.228","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.628377Z","level":"info","event":"[35/74] Fetching GEOIP for 182.95.231.62","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.629792Z","level":"info","event":"[36/74] Fetching GEOIP for 20.100.184.200","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.630946Z","level":"info","event":"[37/74] Fetching GEOIP for 65.20.237.191","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.633966Z","level":"info","event":"[38/74] Fetching GEOIP for 45.41.86.226","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.634933Z","level":"info","event":"[39/74] Fetching GEOIP for 42.83.147.54","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.635794Z","level":"info","event":"[40/74] Fetching GEOIP for 47.251.74.248","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.636456Z","level":"info","event":"[41/74] Fetching GEOIP for 87.121.84.66","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.637058Z","level":"info","event":"[42/74] Fetching GEOIP for 5.61.209.107","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.637814Z","level":"info","event":"[43/74] Fetching GEOIP for 92.53.194.148","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.638590Z","level":"info","event":"[44/74] Fetching GEOIP for 27.147.195.130","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.639293Z","level":"info","event":"[45/74] Fetching GEOIP for 92.63.197.182","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.639904Z","level":"info","event":"[46/74] Fetching GEOIP for 165.154.182.187","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.640548Z","level":"info","event":"[47/74] Fetching GEOIP for 66.132.195.87","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.641354Z","level":"info","event":"[48/74] Fetching GEOIP for 45.156.128.202","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.642052Z","level":"info","event":"[49/74] Fetching GEOIP for 191.37.18.250","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.642682Z","level":"info","event":"[50/74] Fetching GEOIP for 64.62.197.69","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.643393Z","level":"info","event":"[51/74] Fetching GEOIP for 47.251.252.94","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.644176Z","level":"info","event":"[52/74] Fetching GEOIP for 217.24.185.244","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.644964Z","level":"info","event":"[53/74] Fetching GEOIP for 189.206.155.253","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.645942Z","level":"info","event":"[54/74] Fetching GEOIP for 121.122.119.170","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.647186Z","level":"info","event":"[55/74] Fetching GEOIP for 47.245.38.88","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.648362Z","level":"info","event":"[56/74] Fetching GEOIP for 211.180.105.241","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.649283Z","level":"info","event":"[57/74] Fetching GEOIP for 4.235.0.161","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.650237Z","level":"info","event":"[58/74] Fetching GEOIP for 212.156.33.182","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.651354Z","level":"info","event":"[59/74] Fetching GEOIP for 62.60.130.234","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.652425Z","level":"info","event":"[60/74] Fetching GEOIP for 24.232.114.16","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.653150Z","level":"info","event":"[61/74] Fetching GEOIP for 177.37.98.163","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.653972Z","level":"info","event":"[62/74] Fetching GEOIP for 45.142.154.12","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.654731Z","level":"info","event":"[63/74] Fetching GEOIP for 122.13.25.186","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.655679Z","level":"info","event":"[64/74] Fetching GEOIP for 64.62.156.55","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.656461Z","level":"info","event":"[65/74] Fetching GEOIP for 106.63.26.21","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.657187Z","level":"info","event":"[66/74] Fetching GEOIP for 185.216.145.185","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.658093Z","level":"info","event":"[67/74] Fetching GEOIP for 8.209.109.77","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.658838Z","level":"info","event":"[68/74] Fetching GEOIP for 106.63.26.14","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.659537Z","level":"info","event":"[69/74] Fetching GEOIP for 47.185.144.12","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.660839Z","level":"info","event":"[70/74] Fetching GEOIP for 106.63.26.20","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.662140Z","level":"info","event":"[71/74] Fetching GEOIP for 200.107.163.195","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.663721Z","level":"info","event":"[72/74] Fetching GEOIP for 47.239.240.68","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.664846Z","level":"info","event":"[73/74] Fetching GEOIP for 172.94.9.40","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.665828Z","level":"info","event":"[74/74] Fetching GEOIP for 57.129.41.93","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.666740Z","level":"info","event":"Source AbuseIPDB object: raw/abuseipdb/year=2026/month=04/day=25/abuseipdb_raw_20260425_151257.json","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.667499Z","level":"info","event":"Previous GeoIP object: raw/geoip/year=2026/month=04/day=24/geoip_raw_20260424_224307.json","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.668183Z","level":"info","event":"Uploaded final raw payload to MinIO: raw/geoip/year=2026/month=04/day=25/geoip_raw_20260425_151319.json","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.668926Z","level":"info","event":"Total unique records in snapshot: 1869","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.669603Z","level":"info","event":"New: 74 | Updated: 0 | Skipped existing: 26","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.670262Z","level":"info","event":"","logger":"task.stdout"}
+{"timestamp":"2026-04-25T15:14:28.575950Z","level":"info","event":"Done. Returned value was: None","logger":"airflow.task.operators.airflow.providers.standard.decorators.python._PythonDecoratedOperator","filename":"python.py","lineno":229}

@@ -1,0 +1,17 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    default-jdk \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYSPARK_PYTHON=python3
+
+COPY requirements-consumer.txt .
+RUN pip install --no-cache-dir -r requirements-consumer.txt
+
+COPY . .
+
+CMD ["python", "consumer_enrich_ip_profiles_ELK_PG.py"]

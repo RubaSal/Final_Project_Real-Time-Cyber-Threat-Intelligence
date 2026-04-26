@@ -1,0 +1,9 @@
+numpy==1.26.4
+pyspark==4.1.0
+elasticsearch==7.13.4
+psycopg2-binary
+minio
+pandas
+pyarrow
+python-dotenv
+kafka-python

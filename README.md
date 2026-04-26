@@ -1,595 +1,1067 @@
-# Cyber Threat Intelligence Platform
+# IP Threat Intelligence Monitoring Platform
 
 ## Project Overview
 
-This project implements a cyber threat intelligence pipeline that collects, processes, enriches, stores, streams, and prepares threat-related data from external APIs.
+The **IP Threat Intelligence Monitoring Platform** is a cyber threat intelligence data engineering platform designed to collect, process, enrich, store, and visualize information about high-risk IP addresses.
 
-The main purpose of the system is to identify suspicious IP addresses, enrich them with geolocation data, store the different data layers in a data lake, and stream enriched records through Kafka for near real-time processing.
+The platform integrates external threat intelligence and geolocation data, processes the data through a streaming pipeline, enriches IP records in the consumer layer, and stores the final enriched IP profiles in PostgreSQL and Elasticsearch.
 
-The project is built as a modular pipeline and is designed to simulate a real-world cyber threat intelligence workflow.
+The main goal of the project is to help organizations monitor suspicious IP activity, analyze cyber threat patterns, and investigate IP addresses using dashboards and lookup capabilities.
 
 ---
 
 ## Business Goal
 
-The business goal of this platform is to enable an organization to collect, process, enrich, store, and stream cyber threat data from multiple external sources in order to identify high-risk IP addresses and improve the ability to detect patterns, anomalies, geographic trends, and broader cyber activity context in near real time.
+Organizations are constantly exposed to cyber threats such as:
 
-A practical example is enriching suspicious IPs from a blacklist source with geolocation data, storing the results in a structured data lake, and sending enriched records through Kafka for downstream consumption and analysis.
+- High-risk IP addresses
+- Suspicious domains
+- Brute-force attempts
+- Bot traffic
+- Botnets
+- Phishing-related activity
+- Abnormal spikes in threat reports
+
+The business goal of this platform is to provide a centralized monitoring system that helps security teams answer questions such as:
+
+- Which high-risk IP addresses are currently active?
+- From which countries are the threats coming?
+- What is the risk level of each IP address?
+- Are there unusual spikes in reports from a specific country or source?
+- What additional context is available for a specific IP address?
+- Can analysts quickly investigate a specific IP?
+
+For example, if many suspicious IPs are reported from the same country within a short time window, the platform can help identify this pattern and support faster investigation.
 
 ---
 
-## Current Status
+## Main Use Case
 
-At the current stage, the project already supports:
+A security analyst wants to investigate suspicious IP activity.
 
-* Ingestion of suspicious IP data from AbuseIPDB
-* Transformation of raw API responses into processed datasets
-* Enrichment of AbuseIPDB records with GeoIP context
-* Ingestion and transformation of security news data
-* Storage of raw, processed, and enriched datasets in MinIO
-* Kafka local streaming pipeline using:
+The platform collects IP threat intelligence data from external sources, stores raw and processed data in MinIO, streams records through Kafka, enriches the records in the Consumer / PySpark layer, and writes the final enriched IP profiles to PostgreSQL and Elasticsearch.
 
-  * ZooKeeper
-  * Kafka broker
-  * Kafdrop
-* Kafka producer that reads enriched records directly from MinIO
-* Kafka consumer that reads topic messages and stores them locally
+The analyst can then use Kibana dashboards or an IP lookup interface to search for a specific IP address and view its risk score, country, source, timestamps, and enrichment details.
 
-The current streaming flow that was validated is:
+---
+
+## Architecture
+
+The platform is built using a layered data architecture.
 
 ```text
-MinIO -> Kafka -> Consumer
+External Sources
+AbuseIPDB / OTX / GeoIP API
+        |
+        v
+Ingestion Layer
+Python Collectors
+        |
+        v
+Raw / Processed Storage
+MinIO
+        |
+        v
+Kafka Producer
+        |
+        v
+Streaming Layer
+Kafka Topic
+        |
+        v
+Processing Layer
+Consumer / PySpark
+Clean, Enrich, Calculate Risk Score, Generate IP Profile
+        |
+        v
+Serving Layer
+PostgreSQL + Elasticsearch
+        |
+        v
+Kibana Dashboards + User / Analyst IP Lookup
 ```
 
 ---
 
-## Project Architecture
+## Architecture Diagram
 
-The project architecture is based on the following logical flow:
+If an architecture image is included in the repository, it can be referenced as:
 
-1. **Data Collection**
-   Pull raw data from external APIs:
+```markdown
+![Architecture Diagram](architecture/ip_threat_intelligence_architecture.png)
+```
 
-   * AbuseIPDB API
-   * GeoIP API
-   * Security News API
+The diagram should reflect the following important point:
 
-2. **Data Transformation**
-   Convert raw API responses into cleaner and flatter processed datasets.
-
-3. **Data Enrichment**
-   Enrich suspicious IP addresses with geolocation information.
-
-4. **Contextual Intelligence Layer**
-   Collect and process cybersecurity news as a broader contextual source for threat analysis.
-
-5. **Storage Layer**
-   Store raw, processed, and enriched data in MinIO as a local data lake.
-
-6. **Streaming Layer**
-   Read enriched records from MinIO and publish them to Kafka for near real-time processing.
-
-7. **Consumption Layer**
-   Consume Kafka messages and validate downstream delivery.
-
-8. **Orchestration Layer**
-   Use Airflow in a later stage to orchestrate the pipeline and manage execution order.
+```text
+MinIO stores raw and processed data only.
+The enrichment process is performed in the Consumer / PySpark stage.
+The final enriched IP profiles are stored in PostgreSQL and Elasticsearch.
+```
 
 ---
 
-## Data Sources
+## Architecture Layers
 
-### 1. AbuseIPDB API
+### 1. External Sources
 
-Used to retrieve suspicious / blacklisted IP addresses.
+The platform collects data from external cyber intelligence and geolocation sources.
 
-Example fields extracted:
+| Source | Purpose |
+|---|---|
+| AbuseIPDB | Provides reported abusive or suspicious IP addresses |
+| OTX | Provides additional threat intelligence indicators |
+| GeoIP API | Provides geolocation enrichment for IP addresses |
 
-* `ip_address`
-* `country_code`
-* `abuse_confidence_score`
-* `last_reported_at`
-* `ingestion_time`
-
-### 2. GeoIP API
-
-Used to retrieve geolocation and metadata about IP addresses.
-
-Example fields extracted:
-
-* `continent_name`
-* `country_name`
-* `state_province`
-* `city`
-* `latitude`
-* `longitude`
-* `country_code2`
-* `is_eu`
-
-### 3. Security News API
-
-Used to retrieve cybersecurity-related news articles for broader threat context.
-
-Example fields extracted:
-
-* `source_name`
-* `title`
-* `description`
-* `published_at`
-* `attack_type`
-* `mentioned_countries`
-* `primary_geographic_context`
-* `ingestion_time`
+These sources provide the raw data that is later processed, streamed, enriched, and analyzed by the platform.
 
 ---
 
-## Current Project Structure
+### 2. Ingestion Layer
+
+The ingestion layer is responsible for collecting raw data from external APIs.
+
+Python scripts are used as collectors.
+
+Example scripts:
+
+```text
+ingest_abuseipdb.py
+ingest_otx.py
+ingest_geoip.py
+```
+
+The ingestion process:
+
+1. Calls the external APIs.
+2. Retrieves raw threat intelligence and geolocation data.
+3. Saves raw responses.
+4. Performs initial processing or standardization when needed.
+5. Stores raw and processed files in MinIO.
+6. Sends relevant records to Kafka for streaming and further processing.
+
+---
+
+### 3. MinIO Storage Layer
+
+MinIO is used as an S3-compatible object storage layer.
+
+In this project, MinIO stores:
+
+- Raw data files
+- Processed data files
+
+MinIO is **not** used as the main storage for the final enriched IP profiles.
+
+The final enriched records are generated later by the Consumer / PySpark stage and stored in PostgreSQL and Elasticsearch.
+
+Example logical MinIO structure:
+
+```text
+cyber-threat-intelligence/
+│
+├── raw/
+│   ├── abuseipdb/
+│   ├── otx/
+│   └── geoip/
+│
+└── processed/
+    ├── abuseipdb/
+    ├── otx/
+    └── geoip/
+```
+
+MinIO allows the platform to:
+
+- Preserve raw API responses
+- Store processed files
+- Support traceability
+- Support debugging
+- Reprocess historical files when needed
+- Separate raw data from processed data
+
+---
+
+### 4. Kafka Streaming Layer
+
+Kafka is used as the streaming layer.
+
+The producer sends IP records into Kafka topics, and the consumer reads those records for processing and enrichment.
+
+Example Kafka topic:
+
+```text
+abuseipdb_geoip_topic
+```
+
+Kafka helps decouple ingestion from processing.
+
+This means that ingestion scripts can send records to Kafka, while the consumer can process records independently and continuously.
+
+The Kafka layer supports a near-real-time processing architecture after the data is ingested.
+
+---
+
+### 5. Processing Layer
+
+The processing layer is responsible for transforming, enriching, and preparing the final IP profiles.
+
+In this project, the enrichment process is performed in the **Consumer / PySpark** stage.
+
+The consumer reads records from Kafka and performs the following steps:
+
+- Reads IP records from Kafka
+- Cleans and standardizes fields
+- Parses timestamps
+- Adds GeoIP context
+- Adds threat intelligence context
+- Adds ASN or network-related enrichment when available
+- Calculates a risk score
+- Generates a final enriched IP profile
+- Writes the final output to PostgreSQL
+- Indexes the final output into Elasticsearch
+
+Example enriched IP profile fields:
+
+```text
+ip_address
+source
+abuse_country_code
+abuse_confidence_score
+last_reported_at
+geo_country_name
+geo_country_code
+geo_city
+geo_latitude
+geo_longitude
+risk_score
+risk_level
+ingestion_time
+enrichment_time
+```
+
+---
+
+### 6. Serving Layer
+
+The serving layer stores the final enriched data in systems optimized for querying, searching, and visualization.
+
+| Component | Purpose |
+|---|---|
+| PostgreSQL | Stores structured enriched IP profiles |
+| Elasticsearch | Stores searchable enriched IP profiles for fast investigation |
+| Kibana | Visualizes dashboards, maps, and investigation views |
+| MinIO | Stores raw and processed files for traceability and replay |
+
+Important distinction:
+
+```text
+MinIO = Raw and processed file storage
+Consumer / PySpark = Enrichment logic
+PostgreSQL = Structured enriched data storage
+Elasticsearch = Searchable enriched data index
+Kibana = Dashboards and investigation interface
+```
+
+---
+
+### 7. User / Analyst IP Lookup
+
+The `User / Analyst IP Lookup` component is part of the serving layer.
+
+It allows a user or security analyst to search for a specific IP address and retrieve its enriched threat profile.
+
+The lookup component uses data from:
+
+- Elasticsearch
+- PostgreSQL
+
+Example lookup result:
+
+```text
+IP Address: 192.0.2.10
+Risk Level: High
+Risk Score: 95
+Country: Netherlands
+City: Amsterdam
+Source: AbuseIPDB
+Last Reported At: 2026-03-09 18:17:01 UTC
+```
+
+This component is considered a serving and investigation feature, not an external data source.
+
+---
+
+### 8. Airflow Orchestration
+
+Apache Airflow is used to orchestrate the pipeline.
+
+Airflow is responsible for:
+
+- Scheduling jobs
+- Managing workflow dependencies
+- Triggering ingestion scripts
+- Coordinating ETL tasks
+- Monitoring pipeline execution
+
+Example DAG flow:
+
+```text
+ingest_abuseipdb
+        |
+        v
+transform_abuseipdb
+        |
+        v
+upload_raw_and_processed_to_minio
+        |
+        v
+send_to_kafka
+        |
+        v
+consumer_processing_and_enrichment
+        |
+        v
+write_to_postgresql_and_elasticsearch
+```
+
+The DAG can be scheduled to run daily or according to the required data refresh frequency.
+
+---
+
+## Technology Stack
+
+| Technology | Role |
+|---|---|
+| Python | Data ingestion, transformation, and enrichment |
+| Docker | Containerized development environment |
+| Docker Compose | Multi-container orchestration |
+| MinIO | S3-compatible storage for raw and processed files |
+| Kafka | Streaming and message broker |
+| PySpark | Data processing and enrichment |
+| PostgreSQL | Structured storage for enriched IP profiles |
+| Elasticsearch | Search index for enriched IP profiles |
+| Kibana | Dashboards and visualization |
+| Apache Airflow | Workflow orchestration |
+| Kafdrop | Kafka topic inspection and debugging |
+
+---
+
+## Project Structure
+
+Example project structure:
 
 ```text
 Final_Project_Real-Time-Cyber-Threat-Intelligence/
 │
+├── dags/
+│   └── cyber_threat_intelligence_dag.py
+│
+├── scripts/
+│   ├── ingest_abuseipdb.py
+│   ├── ingest_otx.py
+│   ├── ingest_geoip.py
+│   ├── transform_abuseipdb.py
+│   ├── transform_geoip.py
+│   ├── upload_to_minio.py
+│   ├── producer_abuseipdb_geoip.py
+│   └── consumer_abuseipdb_geoip.py
+│
 ├── data/
-├── .env
-├── .gitignore
+│   ├── raw/
+│   └── processed/
+│
+├── architecture/
+│   └── ip_threat_intelligence_architecture.png
+│
 ├── docker-compose.yaml
-├── ingest_abuseipdb.py
-├── transform_abuseipdb.py
-├── ingest_geoip.py
-├── transform_geoip.py
-├── enrich_abuseipdb_with_geoip.py
-├── ingest_security_news.py
-├── transform_security_news.py
-├── upload_to_minio.py
-├── producer_abuseipdb_geoip.py
-├── consumer_abuseipdb_geoip.py
+├── Dockerfile.airflow
 ├── requirements.txt
-├── abuseipdb_raw.json
-├── abuseipdb_processed.json
-├── geoip_raw.json
-├── geoip_processed.json
-├── abuseipdb_geoip_enriched.json
-├── abuseipdb_geoip_enrichment_errors.json
-├── security_news_raw.json
-├── security_news_processed.json
-├── consumer_output.jsonl
+├── requirements-airflow.txt
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
----
-
-## Files Description
-
-### 1. `ingest_abuseipdb.py`
-
-Connects to the AbuseIPDB API and pulls raw blacklist data.
-The response is saved locally as:
-
-* `abuseipdb_raw.json`
-
-### 2. `transform_abuseipdb.py`
-
-Reads the raw AbuseIPDB response and transforms it into a simplified processed dataset.
-The processed output is saved as:
-
-* `abuseipdb_processed.json`
-
-### 3. `ingest_geoip.py`
-
-Connects to the GeoIP API and pulls geolocation data for an IP address.
-The response is saved locally as:
-
-* `geoip_raw.json`
-
-### 4. `transform_geoip.py`
-
-Reads the raw GeoIP response and transforms it into a flatter processed structure.
-The processed output is saved as:
-
-* `geoip_processed.json`
-
-### 5. `enrich_abuseipdb_with_geoip.py`
-
-Combines threat intelligence data from AbuseIPDB with geolocation context from the GeoIP API using the IP address as the join key.
-
-The output is saved locally as:
-
-* `abuseipdb_geoip_enriched.json`
-
-Failed enrichment attempts are saved locally as:
-
-* `abuseipdb_geoip_enrichment_errors.json`
-
-### 6. `ingest_security_news.py`
-
-Connects to the NewsAPI service and pulls cybersecurity-related news articles based on predefined security keywords.
-The response is saved locally as:
-
-* `security_news_raw.json`
-
-### 7. `transform_security_news.py`
-
-Reads the raw security news response and transforms it into a simplified processed dataset containing the most relevant article fields, attack categories, and geographic context.
-The processed output is saved as:
-
-* `security_news_processed.json`
-
-### 8. `upload_to_minio.py`
-
-Connects to MinIO and uploads the project datasets into the data lake bucket using an organized folder structure for raw, processed, and enriched layers.
-
-### 9. `producer_abuseipdb_geoip.py`
-
-Reads the enriched JSON dataset directly from MinIO and publishes each record as a separate Kafka message to the topic:
-
-* `abuseipdb_geoip_topic`
-
-### 10. `consumer_abuseipdb_geoip.py`
-
-Consumes messages from the Kafka topic, prints them, and saves them locally as:
-
-* `consumer_output.jsonl`
-
-### 11. `docker-compose.yaml`
-
-Defines the local infrastructure services used by the project:
-
-* MinIO
-* ZooKeeper
-* Kafka
-* Kafdrop
+The actual structure may vary depending on the development stage.
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file in the project root directory and add the following variables:
+The project uses environment variables for API keys and service configuration.
+
+Create a `.env` file in the project root.
+
+Example:
 
 ```env
 ABUSE_API_KEY=your_abuseipdb_api_key
 GEOIP_API_KEY=your_geoip_api_key
-SECURITY_NEWS_API_KEY=your_security_news_api_key
-MINIO_ROOT_USER=your_minio_username
-MINIO_ROOT_PASSWORD=your_minio_password
+OTX_API_KEY=your_otx_api_key
+
+MINIO_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=cyber-threat-intelligence
+
+KAFKA_BOOTSTRAP_SERVERS=localhost:29092
+KAFKA_TOPIC=abuseipdb_geoip_topic
+
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=cyber_threat_intelligence
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+
+ELASTICSEARCH_HOST=http://localhost:9200
+ELASTICSEARCH_INDEX=ip_profiles_enriched
 ```
 
-These variables are used to authenticate requests to the external APIs and to configure MinIO access.
+Important:
 
-* `ABUSE_API_KEY` – API key for AbuseIPDB
-* `GEOIP_API_KEY` – API key for the GeoIP service
-* `SECURITY_NEWS_API_KEY` – API key for the Security News service
-* `MINIO_ROOT_USER` – username for the local MinIO service
-* `MINIO_ROOT_PASSWORD` – password for the local MinIO service
+```text
+Do not commit the real .env file to GitHub.
+Only commit .env.example.
+```
 
 ---
 
-## Installation
+## Installation and Setup
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/RubaSal/Final_Project_Real-Time-Cyber-Threat-Intelligence
+git clone https://github.com/your-username/Final_Project_Real-Time-Cyber-Threat-Intelligence.git
 cd Final_Project_Real-Time-Cyber-Threat-Intelligence
 ```
 
-### 2. Install dependencies
+---
+
+### 2. Create a Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate the environment.
+
+On Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+On macOS or Linux:
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+### 3. Install Python Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Create a `.env` file
+Example dependencies:
 
-Create a `.env` file in the project root directory and add your actual keys and credentials:
-
-```env
-ABUSE_API_KEY=your_actual_abuseipdb_api_key
-GEOIP_API_KEY=your_actual_geoip_api_key
-SECURITY_NEWS_API_KEY=your_actual_security_news_api_key
-MINIO_ROOT_USER=your_actual_minio_username
-MINIO_ROOT_PASSWORD=your_actual_minio_password
+```text
+requests
+python-dotenv
+minio
+kafka-python
+pyspark
+psycopg2-binary
+elasticsearch
 ```
 
-### 4. Start the local infrastructure
+---
+
+### 4. Start the Docker Environment
 
 ```bash
 docker compose up -d
 ```
 
----
-
-## Docker Services
-
-The local environment currently includes:
-
-* **MinIO** – local object storage / data lake
-* **ZooKeeper** – coordination service for Kafka
-* **Kafka** – message broker for streaming
-* **Kafdrop** – web UI for viewing Kafka topics and brokers
-
-Useful local endpoints:
-
-* MinIO API: `http://localhost:9000`
-* MinIO Console: `http://localhost:9001`
-* Kafka external listener: `localhost:29092`
-* Kafdrop UI: `http://localhost:9003`
-
----
-
-## How to Run the Current Pipeline
-
-### Step 1 - Pull raw data from AbuseIPDB
+Check running containers:
 
 ```bash
-python ingest_abuseipdb.py
-```
-
-### Step 2 - Transform AbuseIPDB data
-
-```bash
-python transform_abuseipdb.py
-```
-
-### Step 3 - Pull raw data from GeoIP
-
-```bash
-python ingest_geoip.py
-```
-
-### Step 4 - Transform GeoIP data
-
-```bash
-python transform_geoip.py
-```
-
-### Step 5 - Enrich AbuseIPDB data with GeoIP
-
-```bash
-python enrich_abuseipdb_with_geoip.py
-```
-
-### Step 6 - Pull raw security news data
-
-```bash
-python ingest_security_news.py
-```
-
-### Step 7 - Transform security news data
-
-```bash
-python transform_security_news.py
-```
-
-### Step 8 - Upload datasets to MinIO
-
-```bash
-python upload_to_minio.py
-```
-
-### Step 9 - Create Kafka topic
-
-```bash
-docker exec -it kafka kafka-topics.sh --bootstrap-server localhost:9092 --create --if-not-exists --topic abuseipdb_geoip_topic --partitions 1 --replication-factor 1
-```
-
-### Step 10 - Produce enriched records from MinIO to Kafka
-
-```bash
-python producer_abuseipdb_geoip.py
-```
-
-### Step 11 - Consume Kafka messages
-
-```bash
-python consumer_abuseipdb_geoip.py
+docker compose ps
 ```
 
 ---
 
-## Current Workflow
+## Main Services
 
-At the current stage, the project performs the following steps:
+| Service | Default URL / Port |
+|---|---|
+| MinIO API | http://localhost:9000 |
+| MinIO Console | http://localhost:9001 |
+| Kafka | localhost:29092 |
+| Kafdrop | http://localhost:9003 |
+| PostgreSQL | localhost:5432 |
+| Elasticsearch | http://localhost:9200 |
+| Kibana | http://localhost:5601 |
+| Airflow | http://localhost:8080 |
 
-1. Pulls suspicious IP data from AbuseIPDB
-2. Stores the raw AbuseIPDB response as JSON
-3. Transforms AbuseIPDB data into a processed dataset
-4. Pulls geolocation data from GeoIP API
-5. Stores the raw GeoIP response as JSON
-6. Transforms GeoIP data into a processed dataset
-7. Enriches AbuseIPDB IP addresses with geolocation data from GeoIP
-8. Saves the enriched output as a flat JSON dataset
-9. Pulls cybersecurity-related news from the Security News API
-10. Stores the raw security news response as JSON
-11. Transforms security news data into a processed contextual intelligence dataset
-12. Starts local MinIO, ZooKeeper, Kafka, and Kafdrop services with Docker Compose
-13. Uploads raw datasets to MinIO
-14. Uploads processed datasets to MinIO
-15. Uploads enriched datasets to MinIO in an organized bucket structure
-16. Creates a Kafka topic for streaming
-17. Reads enriched data directly from MinIO and sends it to Kafka
-18. Consumes Kafka messages and stores them locally for validation
+Ports may change depending on the local Docker Compose configuration.
 
 ---
 
-## Enrichment Logic
+## Running the Pipeline Manually
 
-### 1. IP Enrichment
+### 1. Ingest AbuseIPDB Data
 
-The IP enrichment stage combines threat intelligence data from AbuseIPDB with geolocation context from the GeoIP API.
+```bash
+python scripts/ingest_abuseipdb.py
+```
 
-The two sources are joined using the IP address as the common key.
+Expected output:
 
-The final enriched output is a flat JSON structure that includes threat-related fields, geolocation fields, and pipeline timestamps for traceability and downstream processing.
-
-Current output:
-
-* `abuseipdb_geoip_enriched.json`
-
-### 2. Contextual Security News Enrichment
-
-Security News is not directly joined to the IP-level dataset.
-
-Instead, it is used as a contextual intelligence source that complements the technical threat data.
-
-While AbuseIPDB and GeoIP are directly joined using the IP address, Security News is correlated with the existing data through attack-related topics and geographic context, such as countries mentioned in cyber-related articles.
-
-Current output:
-
-* `security_news_processed.json`
+```text
+abuseipdb_raw.json
+```
 
 ---
 
-## MinIO Data Lake Storage
+### 2. Transform AbuseIPDB Data
 
-The project stores all data layers in MinIO using a structured bucket-based layout.
+```bash
+python scripts/transform_abuseipdb.py
+```
 
-Bucket name:
+Expected output:
 
-* `cyber-threat-intelligence`
+```text
+abuseipdb_processed.json
+```
 
-Logical object structure:
+---
+
+### 3. Ingest and Transform GeoIP Data
+
+```bash
+python scripts/ingest_geoip.py
+python scripts/transform_geoip.py
+```
+
+Expected output:
+
+```text
+geoip_raw.json
+geoip_processed.json
+```
+
+---
+
+### 4. Upload Raw and Processed Data to MinIO
+
+```bash
+python scripts/upload_to_minio.py
+```
+
+The files are uploaded to the configured MinIO bucket.
+
+Example upload paths:
 
 ```text
 raw/abuseipdb/abuseipdb_raw.json
-raw/geoip/geoip_raw.json
-raw/security_news/security_news_raw.json
-
 processed/abuseipdb/abuseipdb_processed.json
+raw/geoip/geoip_raw.json
 processed/geoip/geoip_processed.json
-processed/security_news/security_news_processed.json
-
-enriched/abuseipdb_geoip_enriched.json
 ```
-
-This structure separates raw, processed, and enriched data layers and makes the pipeline easier to manage, validate, and extend.
 
 ---
 
-## Kafka Streaming Layer
+### 5. Send Records to Kafka
 
-Kafka is currently used as the streaming layer for enriched IP-level threat records.
+```bash
+python scripts/producer_abuseipdb_geoip.py
+```
 
-### Topic
+The producer reads the relevant processed records and sends them to the Kafka topic.
 
-* `abuseipdb_geoip_topic`
-
-### Producer flow
-
-The producer reads `abuseipdb_geoip_enriched.json` directly from MinIO:
-
-* Bucket: `cyber-threat-intelligence`
-* Object: `enriched/abuseipdb_geoip_enriched.json`
-
-Each enriched record is sent as a separate Kafka message.
-
-### Consumer flow
-
-The consumer reads messages from `abuseipdb_geoip_topic`, prints them, and saves them locally in:
-
-* `consumer_output.jsonl`
-
-### End-to-end flow
+Example topic:
 
 ```text
-MinIO -> Kafka -> Consumer
+abuseipdb_geoip_topic
 ```
 
-This confirms that the local streaming pipeline is working correctly.
+---
+
+### 6. Run the Consumer
+
+```bash
+python scripts/consumer_abuseipdb_geoip.py
+```
+
+The consumer reads messages from Kafka, performs enrichment, calculates the risk score, and writes the final enriched IP profiles to:
+
+- PostgreSQL
+- Elasticsearch
 
 ---
 
-## Why This Architecture
+## Running with Airflow
 
-This architecture separates responsibilities into different layers:
+Start the Airflow services using Docker Compose:
 
-* API ingestion for collecting external data
-* Transformation for cleaning and structuring data
-* IP-level enrichment for combining AbuseIPDB and GeoIP data
-* Contextual intelligence processing for cybersecurity news
-* MinIO for centralized storage and data lake management
-* Kafka for streaming data between pipeline components
-* Kafdrop for monitoring Kafka topics and broker status
-* Airflow for orchestration and scheduling in the next stage
+```bash
+docker compose up -d airflow-init airflow-api-server airflow-scheduler airflow-dag-processor
+```
 
-This approach makes the project modular, scalable, and easier to extend.
+Open Airflow in the browser:
 
----
+```text
+http://localhost:8080
+```
 
-## Technologies Used
+Enable the DAG:
 
-* Python
-* Requests
-* python-dotenv
-* JSON
-* GitHub
-* NewsAPI
-* MinIO
-* Docker
-* Docker Compose
-* Kafka
-* ZooKeeper
-* Kafdrop
+```text
+cyber_threat_intelligence_dag
+```
 
-### Planned / upcoming technologies
-
-* Airflow
+The DAG orchestrates the pipeline tasks according to the configured schedule.
 
 ---
 
-## Output Datasets
+## Airflow Components
 
-### Raw datasets
+The project may include several Airflow-related containers:
 
-* `abuseipdb_raw.json`
-* `geoip_raw.json`
-* `security_news_raw.json`
+| Component | Description |
+|---|---|
+| airflow-init | Initializes the Airflow metadata database and creates initial configuration |
+| airflow-api-server | Runs the Airflow web/API service used to access the Airflow UI |
+| airflow-scheduler | Monitors DAG schedules and triggers tasks |
+| airflow-dag-processor | Parses DAG files and prepares them for scheduling |
 
-### Processed datasets
+Important:
 
-* `abuseipdb_processed.json`
-* `geoip_processed.json`
-* `security_news_processed.json`
-
-### Enriched datasets
-
-* `abuseipdb_geoip_enriched.json`
-* `abuseipdb_geoip_enrichment_errors.json`
-
-### Streaming output
-
-* `consumer_output.jsonl`
+```text
+The Airflow scheduler must be running for scheduled DAG runs to execute.
+If Airflow is not running, scheduled jobs will not execute.
+```
 
 ---
 
-## Notes
+## Kafka Validation
 
-* API keys and MinIO credentials are stored in `.env` and should not be committed to GitHub.
-* `.env` is excluded using `.gitignore`.
-* Raw datasets are kept separately from processed datasets to preserve original responses and support reproducibility.
-* The project is being developed incrementally, with each component tested independently before being integrated into the full pipeline.
-* Security News currently acts as a contextual intelligence source rather than a direct IP-level enrichment source.
-* MinIO is used as the local data lake for storing raw, processed, and enriched datasets in a structured format.
-* Kafka is currently used to stream enriched records for local end-to-end validation.
-* The current enriched file used for streaming is the dataset available in MinIO at runtime.
+List Kafka topics:
+
+```bash
+docker exec -it kafka kafka-topics.sh --bootstrap-server localhost:9092 --list
+```
+
+Check topic offsets:
+
+```bash
+docker exec -it kafka kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list localhost:9092 --topic abuseipdb_geoip_topic
+```
+
+Open Kafdrop:
+
+```text
+http://localhost:9003
+```
+
+Kafdrop can be used to inspect:
+
+- Topics
+- Partitions
+- Offsets
+- Messages
+- Consumer groups
+
+---
+
+## PostgreSQL Validation
+
+Connect to PostgreSQL:
+
+```bash
+docker exec -it postgres psql -U postgres -d cyber_threat_intelligence
+```
+
+Count records:
+
+```sql
+SELECT COUNT(*)
+FROM ip_profiles_enriched;
+```
+
+Preview records:
+
+```sql
+SELECT *
+FROM ip_profiles_enriched
+LIMIT 10;
+```
+
+Search for a specific IP:
+
+```sql
+SELECT *
+FROM ip_profiles_enriched
+WHERE ip_address = '192.0.2.10';
+```
+
+---
+
+## Elasticsearch Validation
+
+Check Elasticsearch status:
+
+```bash
+curl http://localhost:9200
+```
+
+Count indexed records:
+
+```bash
+curl http://localhost:9200/ip_profiles_enriched/_count
+```
+
+Search for a specific IP:
+
+```bash
+curl -X GET "http://localhost:9200/ip_profiles_enriched/_search" \
+-H "Content-Type: application/json" \
+-d '{
+  "query": {
+    "match": {
+      "ip_address": "192.0.2.10"
+    }
+  }
+}'
+```
+
+---
+
+## Kibana Dashboards
+
+Kibana is used to visualize the enriched IP profiles stored in Elasticsearch.
+
+Possible dashboards include:
+
+- Threat overview dashboard
+- High-risk IPs dashboard
+- Threat map by country
+- Risk score distribution
+- Abuse confidence score analysis
+- Latest reported IPs
+- IP investigation dashboard
+
+Example dashboard questions:
+
+- Which countries have the highest number of reported IPs?
+- How many IPs are classified as high risk?
+- What is the distribution of risk scores?
+- Which IPs were reported most recently?
+- Are there spikes in reports from specific countries?
+
+---
+
+## Data Flow Summary
+
+The end-to-end data flow is:
+
+```text
+External APIs
+    |
+    v
+Python Collectors
+    |
+    v
+Raw JSON Files
+    |
+    v
+Processed JSON Files
+    |
+    v
+MinIO Raw / Processed Storage
+    |
+    v
+Kafka Producer
+    |
+    v
+Kafka Topic
+    |
+    v
+Consumer / PySpark
+    |
+    v
+Enrichment + Risk Score Calculation
+    |
+    v
+PostgreSQL + Elasticsearch
+    |
+    v
+Kibana + IP Lookup
+```
+
+---
+
+## Risk Score Logic
+
+The platform calculates a risk score based on available threat intelligence indicators.
+
+Example risk score factors:
+
+- Abuse confidence score
+- Number of reports
+- Source reliability
+- Last reported timestamp
+- Country or geolocation context
+- Presence in multiple threat intelligence sources
+
+Example risk levels:
+
+| Risk Score | Risk Level |
+|---|---|
+| 0 - 39 | Low |
+| 40 - 69 | Medium |
+| 70 - 89 | High |
+| 90 - 100 | Critical |
+
+The exact scoring logic can be adjusted based on business and security requirements.
+
+---
+
+## Example Final Enriched Record
+
+The final enriched record is generated by the Consumer / PySpark stage and stored in PostgreSQL and Elasticsearch.
+
+```json
+{
+  "ip_address": "192.0.2.10",
+  "source": "AbuseIPDB",
+  "abuse_country_code": "NL",
+  "abuse_confidence_score": 100,
+  "last_reported_at": "2026-03-09T18:17:01+00:00",
+  "geo_country_name": "Netherlands",
+  "geo_city": "Amsterdam",
+  "geo_latitude": 52.3676,
+  "geo_longitude": 4.9041,
+  "risk_score": 95,
+  "risk_level": "Critical",
+  "ingestion_time": "2026-03-09T18:20:00+00:00",
+  "enrichment_time": "2026-03-09T18:25:00+00:00"
+}
+```
+
+---
+
+## Scheduling Strategy
+
+The platform can support different scheduling strategies.
+
+### Daily Batch Ingestion
+
+External API data is collected once per day.
+
+This approach is useful when API rate limits are strict or when daily refresh is enough for the project scope.
+
+### Near-Real-Time Streaming
+
+Once records are ingested, they are sent through Kafka and processed continuously by the consumer.
+
+This means that after data becomes available, the streaming and enrichment parts of the pipeline can behave near-real-time.
+
+---
+
+## API Rate Limit Handling
+
+Some external APIs may enforce request limits.
+
+For example, if AbuseIPDB returns:
+
+```text
+429 Too Many Requests
+```
+
+it means the request limit was reached.
+
+The platform should handle this case by:
+
+- Logging the error
+- Retrying with a delay when appropriate
+- Avoiding excessive API calls
+- Allowing the pipeline to fail clearly or skip the blocked source depending on the DAG configuration
+- Running the ingestion according to a safe schedule
+
+---
+
+## Error Handling
+
+The project includes error handling for common pipeline issues:
+
+- Missing environment variables
+- API request failures
+- API rate limits
+- Invalid JSON responses
+- Empty datasets
+- Failed MinIO uploads
+- Kafka connection issues
+- PostgreSQL insertion errors
+- Elasticsearch indexing errors
+
+Recommended behavior:
+
+```text
+Fail fast for critical infrastructure errors.
+Log and skip records for non-critical record-level errors.
+Store error outputs when possible for debugging.
+```
+
+---
+
+## Monitoring and Debugging
+
+Check containers:
+
+```bash
+docker compose ps
+```
+
+View logs:
+
+```bash
+docker compose logs -f
+```
+
+View logs for a specific service:
+
+```bash
+docker compose logs -f airflow-scheduler
+docker compose logs -f kafka
+docker compose logs -f spark-consumer
+docker compose logs -f postgres
+docker compose logs -f elasticsearch
+```
+
+Restart a service:
+
+```bash
+docker compose restart service_name
+```
+
+Stop all services:
+
+```bash
+docker compose down
+```
+
+Stop all services and remove volumes:
+
+```bash
+docker compose down -v
+```
+
+Use this command carefully, because it removes persisted Docker volumes.
+
+---
+
+## Current Project Status
+
+The project currently includes the following main components:
+
+- Python ingestion scripts
+- Raw and processed JSON files
+- MinIO storage layer for raw and processed files
+- Kafka producer and consumer flow
+- Kafka topic validation
+- Consumer / PySpark enrichment logic
+- PostgreSQL structured storage for enriched IP profiles
+- Elasticsearch search index for enriched IP profiles
+- Kibana serving layer concept
+- Airflow orchestration design
+- IP lookup architecture design
 
 ---
 
 ## Future Improvements
 
-Possible future enhancements include:
+Possible future improvements:
 
-* Running full-scale enrichment for larger record volumes
-* Saving enrichment progress incrementally during long API enrichment runs
-* Improving country detection in security news articles
-* Adding more advanced threat topic classification
-* Extending the Kafka consumer to write into a database or data lake target
-* Adding Airflow scheduling
-* Adding data validation and error handling improvements
-* Adding analytics or dashboards on top of the enriched data
+- Add more threat intelligence sources
+- Add domain reputation analysis
+- Add organization authentication logs
+- Add brute-force detection logic
+- Add bot traffic detection logic
+- Add phishing-related indicators
+- Improve risk scoring model
+- Add anomaly detection
+- Add alerting mechanism
+- Build a dedicated IP lookup API
+- Add automated dashboard deployment
+- Add CI/CD pipeline
+- Add data quality checks
+- Add unit tests and integration tests
+- Add historical trend analysis
+
+---
+
+## Security Notes
+
+- API keys must be stored in environment variables.
+- The `.env` file should not be committed to GitHub.
+- Sensitive credentials should be excluded using `.gitignore`.
+- Production deployments should use secret management tools.
+- Access to dashboards and lookup tools should be restricted to authorized users.
+
+---
+
+## Example `.gitignore`
+
+```gitignore
+.env
+venv/
+__pycache__/
+*.pyc
+
+data/raw/
+data/processed/
+
+*.json
+*.jsonl
+*.log
+
+airflow/logs/
+airflow/plugins/
+airflow/data/
+
+.minio/
+```
+
+Adjust this file based on which data files should or should not be committed.
+
+---
+
+## Project Summary
+
+The **IP Threat Intelligence Monitoring Platform** demonstrates a full data engineering pipeline for cyber threat intelligence.
+
+It collects external IP threat data, stores raw and processed files in MinIO, streams records through Kafka, enriches the data in the Consumer / PySpark layer, stores the final enriched output in PostgreSQL and Elasticsearch, and provides dashboards and IP investigation capabilities through Kibana.
+
+This project combines key Big Data and Cloud Engineering concepts:
+
+- API ingestion
+- Data lake storage
+- Streaming architecture
+- Data enrichment
+- Workflow orchestration
+- Search indexing
+- Structured storage
+- Dashboard visualization
+- Cyber threat intelligence analytics
 
 ---
 
 ## Author
 
-Ruba Saleh
-
-Final Project - Cyber Threat Intelligence Platform
+Developed as a final project for the Cloud & Big Data Engineering course.

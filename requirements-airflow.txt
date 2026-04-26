@@ -1,9 +1,8 @@
-numpy==1.26.4
 requests
 python-dotenv
 minio
 kafka-python
-elasticsearch==7.13.4
+elasticsearch
 pandas
 pyarrow
 psycopg2-binary

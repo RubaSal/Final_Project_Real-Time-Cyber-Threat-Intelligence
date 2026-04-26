@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Airflow runtime files
+airflow-logs/
+logs/
+airflow/logs/
+
+# Spark / Kafka / checkpoints
+checkpoints/
+spark-warehouse/
+metastore_db/
+
+# Local data files
+data/
+*.json
+*.jsonl
+*.csv
+*.parquet
+*.gz
+
+# Docker / OS files
+.DS_Store
+Thumbs.db
+
+# MinIO local volume if exists
+minio-data/
+
+# PostgreSQL / Elasticsearch local volumes if exist
+postgres-data/
+elasticsearch-data/
+
+backup
+company_logs
+Local
