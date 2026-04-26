@@ -10,5 +10,4 @@ airflow-plugins
 checkpoints/
 Local/
 company_logs/
-dags/
 output/
